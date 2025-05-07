@@ -1,12 +1,12 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP app to Azure Web App - codefc-app
+name: Build and deploy Azure Vote app to Azure Web App - codefc-app
 
 on:
   push:
-    branches:
-      - master
+    paths:
+      - 'azure-vote/**' # Trigger workflow only for changes in the azure-vote folder
   workflow_dispatch:
 
 jobs:
@@ -23,15 +23,17 @@ jobs:
         uses: NuGet/setup-nuget@v1.0.5
 
       - name: Restore NuGet packages
+        working-directory: ./azure-vote
         run: nuget restore
 
       - name: Publish to folder
+        working-directory: ./azure-vote
         run: msbuild /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="\published\"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: ASP-app
+          name: Azure-Vote-App
           path: '/published/**'
 
   deploy:
@@ -41,13 +43,13 @@ jobs:
       name: 'codefc2025dev'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write # This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: ASP-app
+          name: Azure-Vote-App
       
       - name: Login to Azure
         uses: azure/login@v2
@@ -63,4 +65,3 @@ jobs:
           app-name: 'codefc-app'
           slot-name: 'codefc2025dev'
           package: .
-          
